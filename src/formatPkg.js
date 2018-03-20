@@ -209,22 +209,31 @@ function getVersions(cleaned) {
   return {};
 }
 
+const forcedKeywords = {
+  'babel-plugin': ({ name }) =>
+    name.startsWith('@babel/plugin') || name.startsWith('babel-plugin-'),
+  'vue-cli-plugin': ({ name }) =>
+    /^(@vue\/|vue-|@[\w-]+\/vue-)cli-plugin-/.test(name),
+};
+
 function getKeywords(cleaned) {
-  const babelPlugins =
-    cleaned.name.startsWith('@babel/plugin') ||
-    cleaned.name.startsWith('babel-plugin-')
-      ? ['babel-plugin']
-      : [];
+  // Forced keywords
+  const keywords = [];
+  for (const keyword in forcedKeywords) {
+    if (forcedKeywords[keyword](cleaned)) {
+      keywords.push(keyword);
+    }
+  }
 
   if (cleaned.keywords) {
     if (Array.isArray(cleaned.keywords)) {
-      return [...cleaned.keywords, ...babelPlugins];
+      return [...cleaned.keywords, ...keywords];
     }
     if (typeof cleaned.keywords === 'string') {
-      return [cleaned.keywords, ...babelPlugins];
+      return [cleaned.keywords, ...keywords];
     }
   }
-  return [...babelPlugins];
+  return [...keywords];
 }
 
 function getGitHubRepoInfo({ repository, gitHead = 'master' }) {
